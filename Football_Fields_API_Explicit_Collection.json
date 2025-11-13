@@ -1,0 +1,37 @@
+{
+    "info": {
+        "name": "Football Fields API - Explicit URL Collection",
+        "_postman_id": "12345678-abcd-efgh-ijkl-1234567890ab",
+        "description": "API collection with explicit URL structure to troubleshoot URL issues.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Fields",
+            "item": [
+                {
+                    "name": "Get All Fields",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/fields",
+                            "protocol": "http",
+                            "host": [
+                                "127",
+                                "0",
+                                "0",
+                                "1"
+                            ],
+                            "port": "5000",
+                            "path": [
+                                "api",
+                                "fields"
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

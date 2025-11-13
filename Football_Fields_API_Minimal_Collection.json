@@ -1,0 +1,18 @@
+{
+    "info": {
+        "name": "Football Fields API - Minimal Collection",
+        "_postman_id": "12345678-abcd-efgh-ijkl-1234567890ab",
+        "description": "Minimal API collection for the football field booking system to troubleshoot URL issues.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Test URL Issue",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": "http://127.0.0.1:5000/api/fields"
+            }
+        }
+    ]
+}

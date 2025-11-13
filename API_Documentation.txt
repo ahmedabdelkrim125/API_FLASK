@@ -1,0 +1,1735 @@
+Filename: API_Documentation.txt
+API Name: Football Fields Booking API
+Version: 1.0
+Generation Date: 2025-11-13
+Brief Summary: A RESTful API for booking football fields in Cairo and Giza, Egypt with features for user management, field booking, team management, payments, and analytics.
+
+HIGH-LEVEL OVERVIEW
+
+Purpose of the API:
+The Football Fields Booking API is a comprehensive platform that allows users to discover, book, and manage football fields in Cairo and Giza, Egypt. It provides functionality for users to register, search for available fields, make bookings, leave reviews, join teams, make payments, and track analytics. Field owners can manage their fields and bookings, while administrators can oversee the entire platform.
+
+Major Modules/Services:
+1. Authentication Module: User registration, login, password reset with OTP
+2. Fields Module: CRUD operations for football fields, availability checking
+3. Bookings Module: Booking creation, management, and availability checking
+4. Teams Module: Team creation, membership management, and scheduling
+5. Payments Module: Payment processing with multiple payment methods
+6. Reviews Module: Field rating and review system
+7. Clubs Module: Club/field owner management and details
+8. Notifications Module: User notification system
+9. Analytics Module: Dashboard statistics, trends, and data export
+
+Architecture Summary:
+The API follows a RESTful architecture pattern built with Flask, using SQLAlchemy for ORM and JWT for authentication. It's a monolithic application with modular route organization. The API supports multi-language responses (English and Arabic) based on the Accept-Language header.
+
+Main External Dependencies:
+- SQLite/MySQL/PostgreSQL database for data persistence
+- Flask-JWT-Extended for authentication token management
+- Flask-Bcrypt for password hashing
+- Flask-CORS for cross-origin resource sharing
+
+GLOBAL CONVENTIONS
+
+Base URL: http://localhost:5000/api (for local development)
+Versioning Scheme: All endpoints are under /api with no version prefix
+Common Headers:
+- Accept-Language: en|ar (for language selection, defaults to English)
+- Authorization: Bearer <JWT_TOKEN> (for protected endpoints)
+Content Types:
+- Request: application/json
+- Response: application/json
+
+Error Response Format Standard:
+{
+  "message": "Translated error message",
+  "error": "Optional technical error details"
+}
+Status codes follow HTTP standards (400 for bad requests, 401 for unauthorized, 403 for forbidden, 404 for not found, 409 for conflicts, 500 for server errors)
+
+ENDPOINT DOCUMENTATION
+
+Endpoint Title: User Registration
+HTTP Method and Path: POST /register
+Authentication Required: No
+Purpose: Register a new user in the system
+Idempotency: No (creates a new user each time)
+Side Effects: Creates a new user record in the database
+
+Request:
+Required Headers: None
+Optional Headers: Accept-Language
+Path Parameters: None
+Query Parameters: None
+Request Body Schema:
+- name (string, required): User's full name
+- email (string, required): User's email address (must be unique)
+- password (string, required): User's password (will be hashed)
+- phone (string, optional): User's phone number
+- role (string, optional): User role (user or owner, defaults to user)
+
+Example Request:
+curl -X POST http://localhost:5000/api/register \
+  -H "Content-Type: application/json" \
+  -H "Accept-Language: en" \
+  -d '{
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "password": "securepassword123",
+    "phone": "01234567890",
+    "role": "user"
+  }'
+
+Response:
+Successful Response (201):
+{
+  "message": "User created successfully",
+  "user": {
+    "id": 1,
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "phone": "01234567890",
+    "role": "user"
+  },
+  "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+}
+
+Errors:
+- 400 Bad Request: {"message": "Required field missing"} (when required fields are missing)
+- 409 Conflict: {"message": "Email already exists"} (when email is already registered)
+- 500 Internal Server Error: {"message": "Internal server error", "error": "technical details"} (when database operation fails)
+
+UI Mapping: Registration screen with form fields for name, email, password, phone, and role selection. Client-side validation for email format and password strength. Success flow leads to login screen or automatic login.
+
+Edge Cases: Email validation should be performed on the frontend. Password should be at least 8 characters with mixed case and numbers.
+
+Endpoint Title: User Login
+HTTP Method and Path: POST /login
+Authentication Required: No
+Purpose: Authenticate existing user and generate JWT token
+Idempotency: Yes (safe to retry)
+Side Effects: None (read-only operation)
+
+Request:
+Required Headers: None
+Optional Headers: Accept-Language
+Path Parameters: None
+Query Parameters: None
+Request Body Schema:
+- email (string, required): User's registered email
+- password (string, required): User's password
+
+Example Request:
+curl -X POST http://localhost:5000/api/login \
+  -H "Content-Type: application/json" \
+  -H "Accept-Language: en" \
+  -d '{
+    "email": "john.doe@example.com",
+    "password": "securepassword123"
+  }'
+
+Response:
+Successful Response (200):
+{
+  "message": "User logged in successfully",
+  "user": {
+    "id": 1,
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "phone": "01234567890",
+    "role": "user"
+  },
+  "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+}
+
+Errors:
+- 400 Bad Request: {"message": "Required field missing"} (when email or password missing)
+- 401 Unauthorized: {"message": "Invalid email or password"} (when credentials don't match)
+- 500 Internal Server Error: {"message": "Internal server error", "error": "technical details"}
+
+UI Mapping: Login screen with email and password fields. Forgot password link should lead to password reset flow. Successful login should store JWT token and redirect to dashboard.
+
+Edge Cases: Implement rate limiting for failed login attempts. Password should be masked in UI.
+
+Endpoint Title: Forgot Password
+HTTP Method and Path: POST /forgot-password
+Authentication Required: No
+Purpose: Initiate password reset process by sending OTP to user's email
+Idempotency: Yes (safe to retry)
+Side Effects: Creates OTP record in database, sends OTP (simulated in current implementation)
+
+Request:
+Required Headers: None
+Optional Headers: Accept-Language
+Path Parameters: None
+Query Parameters: None
+Request Body Schema:
+- email (string, required): User's registered email
+
+Example Request:
+curl -X POST http://localhost:5000/api/forgot-password \
+  -H "Content-Type: application/json" \
+  -H "Accept-Language: en" \
+  -d '{
+    "email": "john.doe@example.com"
+  }'
+
+Response:
+Successful Response (200):
+{
+  "message": "OTP sent successfully",
+  "message": "OTP sent to john.doe@example.com",
+  "otp": "123456"
+}
+
+Errors:
+- 400 Bad Request: {"message": "Required field missing"} (when email is missing)
+- 404 Not Found: {"message": "User not found"} (when email doesn't exist)
+- 500 Internal Server Error: {"message": "Internal server error", "error": "technical details"}
+
+UI Mapping: Forgot password screen with email input. After submission, user should be directed to OTP entry screen. In production, the OTP field would not be returned in the response.
+
+Edge Cases: OTP expires after 10 minutes. Rate limiting should prevent spamming OTP requests.
+
+Endpoint Title: Reset Password
+HTTP Method and Path: POST /reset-password
+Authentication Required: No
+Purpose: Reset user's password using OTP verification
+Idempotency: No (changes password)
+Side Effects: Updates user's password in database, marks OTP as used
+
+Request:
+Required Headers: None
+Optional Headers: Accept-Language
+Path Parameters: None
+Query Parameters: None
+Request Body Schema:
+- email (string, required): User's registered email
+- otp (string, required): One-time password received by user
+- new_password (string, required): New password for the user
+
+Example Request:
+curl -X POST http://localhost:5000/api/reset-password \
+  -H "Content-Type: application/json" \
+  -H "Accept-Language: en" \
+  -d '{
+    "email": "john.doe@example.com",
+    "otp": "123456",
+    "new_password": "newsecurepassword123"
+  }'
+
+Response:
+Successful Response (200):
+{
+  "message": "Password reset successfully"
+}
+
+Errors:
+- 400 Bad Request: {"message": "Required field missing"} (when required fields are missing)
+- 400 Bad Request: {"message": "Invalid OTP"} (when OTP is incorrect, expired, or already used)
+- 404 Not Found: {"message": "User not found"} (when email doesn't exist)
+- 500 Internal Server Error: {"message": "Internal server error", "error": "technical details"}
+
+UI Mapping: Password reset screen with email, OTP, and new password fields. After successful reset, user should be directed to login screen.
+
+Edge Cases: OTP can only be used once. Password strength validation should be implemented on frontend.
+
+Endpoint Title: Get Fields (List/Search)
+HTTP Method and Path: GET /fields
+Authentication Required: No
+Purpose: Retrieve list of football fields with optional filtering, sorting, and pagination
+Idempotency: Yes (safe to retry)
+Side Effects: None (read-only operation)
+
+Request:
+Required Headers: None
+Optional Headers: Accept-Language
+Path Parameters: None
+Query Parameters:
+- governorate (string, optional): Filter fields by governorate (cairo or giza)
+- min_price (float, optional): Minimum price per hour filter
+- max_price (float, optional): Maximum price per hour filter
+- search (string, optional): Search term for field name or location
+- sort_by (string, optional): Field to sort by (name, price, governorate, id) - defaults to id
+- sort_order (string, optional): Sort order (asc or desc) - defaults to asc
+- page (integer, optional): Page number for pagination - defaults to 1
+- per_page (integer, optional): Items per page (1-100) - defaults to 10
+
+Example Request:
+curl -X GET "http://localhost:5000/api/fields?governorate=giza&min_price=100&max_price=300&sort_by=price&sort_order=asc&page=1&per_page=5" \
+  -H "Accept-Language: en"
+
+Response:
+Successful Response (200):
+{
+  "fields": [
+    {
+      "id": 1,
+      "name": "ON Time Field",
+      "location": "6th of October",
+      "governorate": "giza",
+      "price_per_hour": 250.0,
+      "description": "Well-maintained football field with floodlights",
+      "image": null,
+      "owner_id": 2,
+      "latitude": null,
+      "longitude": null,
+      "opening_time": "08:00:00",
+      "closing_time": "22:00:00",
+      "facilities": []
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "pages": 1,
+    "per_page": 5,
+    "total": 1,
+    "has_next": false,
+    "has_prev": false,
+    "next_num": null,
+    "prev_num": null
+  }
+}
+
+Errors:
+- 500 Internal Server Error: {"message": "Error fetching fields", "error": "technical details"}
+
+UI Mapping: Fields listing screen with search/filter controls (governorate dropdown, price range sliders, search box) and sortable columns. Pagination controls at bottom. Each field should display name, location, price, and image.
+
+Edge Cases: Search is case-insensitive. Price filters are inclusive. Invalid sort_by values default to sorting by id.
+
+Endpoint Title: Get Field Details
+HTTP Method and Path: GET /fields/{id}
+Authentication Required: No
+Purpose: Retrieve detailed information about a specific football field
+Idempotency: Yes (safe to retry)
+Side Effects: None (read-only operation)
+
+Request:
+Required Headers: None
+Optional Headers: Accept-Language
+Path Parameters:
+- id (integer, required): ID of the field to retrieve
+Query Parameters: None
+
+Example Request:
+curl -X GET http://localhost:5000/api/fields/1 \
+  -H "Accept-Language: en"
+
+Response:
+Successful Response (200):
+{
+  "message": "Field retrieved successfully",
+  "field": {
+    "id": 1,
+    "name": "ON Time Field",
+    "location": "6th of October",
+    "governorate": "giza",
+    "price_per_hour": 250.0,
+    "description": "Well-maintained football field with floodlights",
+    "image": null,
+    "owner_id": 2,
+    "latitude": null,
+    "longitude": null,
+    "opening_time": "08:00:00",
+    "closing_time": "22:00:00",
+    "facilities": []
+  }
+}
+
+Errors:
+- 404 Not Found: {"message": "Field not found"} (when field with given ID doesn't exist)
+- 500 Internal Server Error: {"message": "Internal server error", "error": "technical details"}
+
+UI Mapping: Field detail screen showing all field information, image gallery, location map, opening hours, facilities, and action buttons for booking.
+
+Edge Cases: Facilities array may be empty. Opening/closing times may be null.
+
+Endpoint Title: Create Field
+HTTP Method and Path: POST /fields
+Authentication Required: Yes (Bearer JWT)
+Authorization: Owner or Admin role required
+Purpose: Create a new football field listing
+Idempotency: No (creates new field)
+Side Effects: Creates new field record in database
+
+Request:
+Required Headers: Authorization: Bearer <JWT_TOKEN>
+Optional Headers: Accept-Language
+Path Parameters: None
+Query Parameters: None
+Request Body Schema:
+- name (string, required): Name of the football field
+- location (string, required): Location/address of the field
+- governorate (string, required): Governorate (cairo or giza)
+- price_per_hour (float, required): Price per hour in EGP
+- description (string, optional): Description of the field
+- image (string, optional): URL to field image
+- latitude (float, optional): GPS latitude coordinate
+- longitude (float, optional): GPS longitude coordinate
+- opening_time (string, optional): Opening time in HH:MM format (defaults to 08:00)
+- closing_time (string, optional): Closing time in HH:MM format (defaults to 22:00)
+
+Example Request:
+curl -X POST http://localhost:5000/api/fields \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Accept-Language: en" \
+  -d '{
+    "name": "New Field",
+    "location": "Dokki",
+    "governorate": "giza",
+    "price_per_hour": 300.0,
+    "description": "Brand new football field with premium grass",
+    "opening_time": "07:00",
+    "closing_time": "23:00"
+  }'
+
+Response:
+Successful Response (201):
+{
+  "message": "Field created successfully",
+  "field": {
+    "id": 2,
+    "name": "New Field",
+    "location": "Dokki",
+    "governorate": "giza",
+    "price_per_hour": 300.0,
+    "description": "Brand new football field with premium grass",
+    "image": null,
+    "owner_id": 2,
+    "latitude": null,
+    "longitude": null,
+    "opening_time": "07:00:00",
+    "closing_time": "23:00:00",
+    "facilities": []
+  }
+}
+
+Errors:
+- 400 Bad Request: {"message": "Required field missing"} (when required fields are missing)
+- 401 Unauthorized: {"message": "Missing Authorization Header"} (when JWT token is missing)
+- 403 Forbidden: {"message": "Unauthorized"} (when user is not owner or admin)
+- 500 Internal Server Error: {"message": "Internal server error", "error": "technical details"}
+
+UI Mapping: Field creation form for owners with all required and optional fields. Success should redirect to field listing or detail page.
+
+Edge Cases: Only owners and admins can create fields. Regular users are forbidden. Time format must be validated.
+
+Endpoint Title: Update Field
+HTTP Method and Path: PUT /fields/{id}
+Authentication Required: Yes (Bearer JWT)
+Authorization: Owner (of the field) or Admin role required
+Purpose: Update information about an existing football field
+Idempotency: Yes (safe to retry with same data)
+Side Effects: Updates field record in database
+
+Request:
+Required Headers: Authorization: Bearer <JWT_TOKEN>
+Optional Headers: Accept-Language
+Path Parameters:
+- id (integer, required): ID of the field to update
+Query Parameters: None
+Request Body Schema:
+- name (string, optional): Name of the football field
+- location (string, optional): Location/address of the field
+- governorate (string, optional): Governorate (cairo or giza)
+- price_per_hour (float, optional): Price per hour in EGP
+- description (string, optional): Description of the field
+- image (string, optional): URL to field image
+- latitude (float, optional): GPS latitude coordinate
+- longitude (float, optional): GPS longitude coordinate
+- opening_time (string, optional): Opening time in HH:MM format
+- closing_time (string, optional): Closing time in HH:MM format
+
+Example Request:
+curl -X PUT http://localhost:5000/api/fields/2 \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Accept-Language: en" \
+  -d '{
+    "price_per_hour": 350.0,
+    "description": "Brand new football field with premium grass and floodlights"
+  }'
+
+Response:
+Successful Response (200):
+{
+  "message": "Field updated successfully",
+  "field": {
+    "id": 2,
+    "name": "New Field",
+    "location": "Dokki",
+    "governorate": "giza",
+    "price_per_hour": 350.0,
+    "description": "Brand new football field with premium grass and floodlights",
+    "image": null,
+    "owner_id": 2,
+    "latitude": null,
+    "longitude": null,
+    "opening_time": "07:00:00",
+    "closing_time": "23:00:00",
+    "facilities": []
+  }
+}
+
+Errors:
+- 400 Bad Request: {"message": "Required field missing"} (when request body is malformed)
+- 401 Unauthorized: {"message": "Missing Authorization Header"} (when JWT token is missing)
+- 403 Forbidden: {"message": "Unauthorized"} (when user is not owner of field or admin)
+- 404 Not Found: {"message": "Field not found"} (when field with given ID doesn't exist)
+- 500 Internal Server Error: {"message": "Internal server error", "error": "technical details"}
+
+UI Mapping: Field edit form pre-populated with current values. Save button updates the field. Cancel button returns to field detail view.
+
+Edge Cases: Owners can only update their own fields. Admins can update any field. Partial updates are supported.
+
+Endpoint Title: Delete Field
+HTTP Method and Path: DELETE /fields/{id}
+Authentication Required: Yes (Bearer JWT)
+Authorization: Owner (of the field) or Admin role required
+Purpose: Delete an existing football field
+Idempotency: No (deletes resource)
+Side Effects: Removes field record from database (cascades to related bookings, reviews, facilities)
+
+Request:
+Required Headers: Authorization: Bearer <JWT_TOKEN>
+Optional Headers: Accept-Language
+Path Parameters:
+- id (integer, required): ID of the field to delete
+Query Parameters: None
+Request Body: None
+
+Example Request:
+curl -X DELETE http://localhost:5000/api/fields/2 \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Accept-Language: en"
+
+Response:
+Successful Response (200):
+{
+  "message": "Field deleted successfully"
+}
+
+Errors:
+- 401 Unauthorized: {"message": "Missing Authorization Header"} (when JWT token is missing)
+- 403 Forbidden: {"message": "Unauthorized"} (when user is not owner of field or admin)
+- 404 Not Found: {"message": "Field not found"} (when field with given ID doesn't exist)
+- 500 Internal Server Error: {"message": "Internal server error", "error": "technical details"}
+
+UI Mapping: Delete confirmation dialog on field detail or edit page. After deletion, redirect to fields listing.
+
+Edge Cases: Deleting a field also deletes all related bookings, reviews, and facilities. This action cannot be undone.
+
+Endpoint Title: Search Available Fields
+HTTP Method and Path: GET /fields/available
+Authentication Required: No
+Purpose: Search for fields that are available for booking at a specific date and time
+Idempotency: Yes (safe to retry)
+Side Effects: None (read-only operation)
+
+Request:
+Required Headers: None
+Optional Headers: Accept-Language
+Path Parameters: None
+Query Parameters:
+- date (string, required): Date for booking in YYYY-MM-DD format
+- start_time (string, required): Start time in HH:MM format
+- end_time (string, required): End time in HH:MM format
+- governorate (string, optional): Filter fields by governorate (cairo or giza)
+- min_price (float, optional): Minimum price per hour filter
+- max_price (float, optional): Maximum price per hour filter
+- search (string, optional): Search term for field name or location
+- sort_by (string, optional): Field to sort by (name, price, governorate, id) - defaults to id
+- sort_order (string, optional): Sort order (asc or desc) - defaults to asc
+- page (integer, optional): Page number for pagination - defaults to 1
+- per_page (integer, optional): Items per page (1-100) - defaults to 10
+
+Example Request:
+curl -X GET "http://localhost:5000/api/fields/available?date=2025-12-01&start_time=14:00&end_time=16:00&governorate=giza" \
+  -H "Accept-Language: en"
+
+Response:
+Successful Response (200):
+{
+  "message": "Available fields retrieved successfully",
+  "date": "2025-12-01",
+  "start_time": "14:00:00",
+  "end_time": "16:00:00",
+  "available_fields_count": 2,
+  "fields": [
+    {
+      "id": 1,
+      "name": "ON Time Field",
+      "location": "6th of October",
+      "governorate": "giza",
+      "price_per_hour": 250.0,
+      "description": "Well-maintained football field with floodlights",
+      "image": null,
+      "owner_id": 2,
+      "latitude": null,
+      "longitude": null,
+      "opening_time": "08:00:00",
+      "closing_time": "22:00:00",
+      "facilities": []
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "pages": 1,
+    "per_page": 10,
+    "total": 2,
+    "has_next": false,
+    "has_prev": false,
+    "next_num": null,
+    "prev_num": null
+  }
+}
+
+Errors:
+- 400 Bad Request: {"message": "date, start_time, and end_time parameters are required"} (when required parameters missing)
+- 400 Bad Request: {"message": "Invalid date or time format. Use YYYY-MM-DD for date and HH:MM for time"} (when date/time format is invalid)
+- 400 Bad Request: {"message": "Start time must be before end time"} (when start_time >= end_time)
+- 500 Internal Server Error: {"message": "Error searching available fields", "error": "technical details"}
+
+UI Mapping: Booking search form with date picker and time selectors. Results page showing available fields with book now buttons.
+
+Edge Cases: Fields are checked for opening hours and existing bookings. Search is case-insensitive for name/location.
+
+Endpoint Title: Create Booking
+HTTP Method and Path: POST /bookings
+Authentication Required: Yes (Bearer JWT)
+Authorization: Any authenticated user
+Purpose: Create a new booking for a football field
+Idempotency: No (creates new booking)
+Side Effects: Creates new booking record in database
+
+Request:
+Required Headers: Authorization: Bearer <JWT_TOKEN>
+Optional Headers: Accept-Language
+Path Parameters: None
+Query Parameters: None
+Request Body Schema:
+- field_id (integer, required): ID of the field to book
+- date (string, required): Date for booking in YYYY-MM-DD format
+- start_time (string, required): Start time in HH:MM format
+- end_time (string, required): End time in HH:MM format
+
+Example Request:
+curl -X POST http://localhost:5000/api/bookings \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Accept-Language: en" \
+  -d '{
+    "field_id": 1,
+    "date": "2025-12-01",
+    "start_time": "14:00",
+    "end_time": "16:00"
+  }'
+
+Response:
+Successful Response (201):
+{
+  "message": "Booking created successfully",
+  "booking": {
+    "id": 1,
+    "user_id": 1,
+    "team_id": null,
+    "field_id": 1,
+    "date": "2025-12-01",
+    "start_time": "14:00:00",
+    "end_time": "16:00:00",
+    "total_price": 500.0,
+    "status": "pending"
+  }
+}
+
+Errors:
+- 400 Bad Request: {"message": "Required field missing"} (when required fields are missing)
+- 400 Bad Request: {"message": "Invalid booking time"} (when time is outside field hours or start_time >= end_time)
+- 401 Unauthorized: {"message": "Missing Authorization Header"} (when JWT token is missing)
+- 404 Not Found: {"message": "Field not found"} (when field with given ID doesn't exist)
+- 409 Conflict: {"message": "Time slot unavailable"} (when field is already booked for that time)
+- 500 Internal Server Error: {"message": "Internal server error", "error": "technical details"}
+
+UI Mapping: Booking confirmation form showing field details, selected date/time, and total price. Confirm button creates booking. Cancel returns to field search.
+
+Edge Cases: Total price is calculated based on field's price_per_hour and booking duration. Bookings cannot be in the past. Time slots must be available.
+
+Endpoint Title: Get Booking Details
+HTTP Method and Path: GET /bookings/{id}
+Authentication Required: Yes (Bearer JWT)
+Authorization: User (owner of booking), Owner (of field), or Admin
+Purpose: Retrieve detailed information about a specific booking
+Idempotency: Yes (safe to retry)
+Side Effects: None (read-only operation)
+
+Request:
+Required Headers: Authorization: Bearer <JWT_TOKEN>
+Optional Headers: Accept-Language
+Path Parameters:
+- id (integer, required): ID of the booking to retrieve
+Query Parameters: None
+
+Example Request:
+curl -X GET http://localhost:5000/api/bookings/1 \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Accept-Language: en"
+
+Response:
+Successful Response (200):
+{
+  "message": "Booking retrieved successfully",
+  "booking": {
+    "id": 1,
+    "user_id": 1,
+    "team_id": null,
+    "field_id": 1,
+    "date": "2025-12-01",
+    "start_time": "14:00:00",
+    "end_time": "16:00:00",
+    "total_price": 500.0,
+    "status": "pending"
+  }
+}
+
+Errors:
+- 401 Unauthorized: {"message": "Missing Authorization Header"} (when JWT token is missing)
+- 403 Forbidden: {"message": "Unauthorized"} (when user doesn't have permission to view booking)
+- 404 Not Found: {"message": "Booking not found"} (when booking with given ID doesn't exist)
+- 500 Internal Server Error: {"message": "Internal server error", "error": "technical details"}
+
+UI Mapping: Booking detail page showing all booking information, field details, and action buttons (cancel booking, make payment).
+
+Edge Cases: Users can only view their own bookings. Field owners can view bookings for their fields. Admins can view all bookings.
+
+Endpoint Title: Update Booking Status
+HTTP Method and Path: PUT /bookings/{id}
+Authentication Required: Yes (Bearer JWT)
+Authorization: User (owner of booking), Owner (of field), or Admin
+Purpose: Update the status of an existing booking
+Idempotency: Yes (safe to retry with same data)
+Side Effects: Updates booking status in database
+
+Request:
+Required Headers: Authorization: Bearer <JWT_TOKEN>
+Optional Headers: Accept-Language
+Path Parameters:
+- id (integer, required): ID of the booking to update
+Query Parameters: None
+Request Body Schema:
+- status (string, required): New status (confirmed, cancelled, completed)
+
+Example Request:
+curl -X PUT http://localhost:5000/api/bookings/1 \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Accept-Language: en" \
+  -d '{
+    "status": "confirmed"
+  }'
+
+Response:
+Successful Response (200):
+{
+  "message": "Booking status updated",
+  "booking": {
+    "id": 1,
+    "user_id": 1,
+    "team_id": null,
+    "field_id": 1,
+    "date": "2025-12-01",
+    "start_time": "14:00:00",
+    "end_time": "16:00:00",
+    "total_price": 500.0,
+    "status": "confirmed"
+  }
+}
+
+Errors:
+- 400 Bad Request: {"message": "Required field missing"} (when status is missing)
+- 400 Bad Request: {"message": "Invalid status"} (when status is not one of confirmed, cancelled, completed)
+- 401 Unauthorized: {"message": "Missing Authorization Header"} (when JWT token is missing)
+- 403 Forbidden: {"message": "Unauthorized"} (when user doesn't have permission to update booking)
+- 404 Not Found: {"message": "Booking not found"} (when booking with given ID doesn't exist)
+- 500 Internal Server Error: {"message": "Internal server error", "error": "technical details"}
+
+UI Mapping: Booking management interface for field owners to confirm or cancel bookings. Status change should trigger notifications.
+
+Edge Cases: Only valid status transitions should be allowed. Cancellation policies should be enforced on frontend.
+
+Endpoint Title: Delete Booking
+HTTP Method and Path: DELETE /bookings/{id}
+Authentication Required: Yes (Bearer JWT)
+Authorization: User (owner of booking), Owner (of field), or Admin
+Purpose: Delete an existing booking
+Idempotency: No (deletes resource)
+Side Effects: Removes booking record from database
+
+Request:
+Required Headers: Authorization: Bearer <JWT_TOKEN>
+Optional Headers: Accept-Language
+Path Parameters:
+- id (integer, required): ID of the booking to delete
+Query Parameters: None
+Request Body: None
+
+Example Request:
+curl -X DELETE http://localhost:5000/api/bookings/1 \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Accept-Language: en"
+
+Response:
+Successful Response (200):
+{
+  "message": "Booking deleted successfully"
+}
+
+Errors:
+- 401 Unauthorized: {"message": "Missing Authorization Header"} (when JWT token is missing)
+- 403 Forbidden: {"message": "Unauthorized"} (when user doesn't have permission to delete booking)
+- 404 Not Found: {"message": "Booking not found"} (when booking with given ID doesn't exist)
+- 500 Internal Server Error: {"message": "Internal server error", "error": "technical details"}
+
+UI Mapping: Delete button on booking detail page with confirmation dialog. After deletion, redirect to bookings list.
+
+Edge Cases: Only pending bookings should be deletable. Confirmed bookings require cancellation instead.
+
+Endpoint Title: Get User Bookings
+HTTP Method and Path: GET /bookings/user/{user_id}
+Authentication Required: Yes (Bearer JWT)
+Authorization: User (must be the same user) or Admin
+Purpose: Retrieve all bookings for a specific user with pagination
+Idempotency: Yes (safe to retry)
+Side Effects: None (read-only operation)
+
+Request:
+Required Headers: Authorization: Bearer <JWT_TOKEN>
+Optional Headers: Accept-Language
+Path Parameters:
+- user_id (integer, required): ID of the user whose bookings to retrieve
+Query Parameters:
+- page (integer, optional): Page number for pagination - defaults to 1
+- per_page (integer, optional): Items per page (1-100) - defaults to 10
+
+Example Request:
+curl -X GET http://localhost:5000/api/bookings/user/1?page=1&per_page=5 \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Accept-Language: en"
+
+Response:
+Successful Response (200):
+{
+  "message": "User bookings retrieved successfully",
+  "bookings": [
+    {
+      "id": 1,
+      "user_id": 1,
+      "team_id": null,
+      "field_id": 1,
+      "date": "2025-12-01",
+      "start_time": "14:00:00",
+      "end_time": "16:00:00",
+      "total_price": 500.0,
+      "status": "pending"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "pages": 1,
+    "per_page": 5,
+    "total": 1,
+    "has_next": false,
+    "has_prev": false,
+    "next_num": null,
+    "prev_num": null
+  }
+}
+
+Errors:
+- 401 Unauthorized: {"message": "Missing Authorization Header"} (when JWT token is missing)
+- 403 Forbidden: {"message": "Unauthorized"} (when user tries to access another user's bookings)
+- 404 Not Found: {"message": "User not found"} (when user with given ID doesn't exist)
+- 500 Internal Server Error: {"message": "Internal server error", "error": "technical details"}
+
+UI Mapping: User's bookings dashboard showing list of all bookings with status, date, field name, and action buttons.
+
+Edge Cases: Regular users can only access their own bookings. Admins can access any user's bookings.
+
+Endpoint Title: Get Field Bookings
+HTTP Method and Path: GET /bookings/field/{field_id}
+Authentication Required: Yes (Bearer JWT)
+Authorization: Owner (of field) or Admin
+Purpose: Retrieve all bookings for a specific field with pagination
+Idempotency: Yes (safe to retry)
+Side Effects: None (read-only operation)
+
+Request:
+Required Headers: Authorization: Bearer <JWT_TOKEN>
+Optional Headers: Accept-Language
+Path Parameters:
+- field_id (integer, required): ID of the field whose bookings to retrieve
+Query Parameters:
+- page (integer, optional): Page number for pagination - defaults to 1
+- per_page (integer, optional): Items per page (1-100) - defaults to 10
+
+Example Request:
+curl -X GET http://localhost:5000/api/bookings/field/1?page=1&per_page=5 \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Accept-Language: en"
+
+Response:
+Successful Response (200):
+{
+  "message": "Field bookings retrieved successfully",
+  "bookings": [
+    {
+      "id": 1,
+      "user_id": 1,
+      "team_id": null,
+      "field_id": 1,
+      "date": "2025-12-01",
+      "start_time": "14:00:00",
+      "end_time": "16:00:00",
+      "total_price": 500.0,
+      "status": "pending"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "pages": 1,
+    "per_page": 5,
+    "total": 1,
+    "has_next": false,
+    "has_prev": false,
+    "next_num": null,
+    "prev_num": null
+  }
+}
+
+Errors:
+- 401 Unauthorized: {"message": "Missing Authorization Header"} (when JWT token is missing)
+- 403 Forbidden: {"message": "Unauthorized"} (when user is not owner of field or admin)
+- 404 Not Found: {"message": "Field not found"} (when field with given ID doesn't exist)
+- 404 Not Found: {"message": "User not found"} (when user doesn't exist)
+- 500 Internal Server Error: {"message": "Internal server error", "error": "technical details"}
+
+UI Mapping: Field owner's booking management dashboard showing all bookings for their fields with user details and status controls.
+
+Edge Cases: Only field owners and admins can access field bookings. Regular users are forbidden.
+
+Endpoint Title: Check Field Availability
+HTTP Method and Path: GET /bookings/field/{field_id}/availability
+Authentication Required: Yes (Bearer JWT)
+Authorization: Any authenticated user
+Purpose: Check the availability of a specific field for a given date
+Idempotency: Yes (safe to retry)
+Side Effects: None (read-only operation)
+
+Request:
+Required Headers: Authorization: Bearer <JWT_TOKEN>
+Optional Headers: Accept-Language
+Path Parameters:
+- field_id (integer, required): ID of the field to check availability for
+Query Parameters:
+- date (string, required): Date to check availability in YYYY-MM-DD format
+
+Example Request:
+curl -X GET "http://localhost:5000/api/bookings/field/1/availability?date=2025-12-01" \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Accept-Language: en"
+
+Response:
+Successful Response (200):
+{
+  "message": "Field availability retrieved successfully",
+  "field_id": 1,
+  "field_name": "ON Time Field",
+  "date": "2025-12-01",
+  "booked_slots": [
+    {
+      "id": 1,
+      "start_time": "14:00:00",
+      "end_time": "16:00:00",
+      "status": "pending"
+    }
+  ],
+  "available_slots": [
+    {
+      "start_time": "08:00:00",
+      "end_time": "14:00:00"
+    },
+    {
+      "start_time": "16:00:00",
+      "end_time": "22:00:00"
+    }
+  ]
+}
+
+Errors:
+- 400 Bad Request: {"message": "Date parameter is required"} (when date parameter is missing)
+- 400 Bad Request: {"message": "Invalid date format. Use YYYY-MM-DD"} (when date format is invalid)
+- 401 Unauthorized: {"message": "Missing Authorization Header"} (when JWT token is missing)
+- 404 Not Found: {"message": "Field not found"} (when field with given ID doesn't exist)
+- 500 Internal Server Error: {"message": "Error checking field availability", "error": "technical details"}
+
+UI Mapping: Field availability calendar view showing booked and available time slots for a selected date. Clicking available slots should initiate booking flow.
+
+Edge Cases: Available slots are calculated based on field's opening hours minus existing bookings. Booked slots exclude cancelled bookings.
+
+Endpoint Title: Create Review
+HTTP Method and Path: POST /reviews
+Authentication Required: Yes (Bearer JWT)
+Authorization: Any authenticated user
+Purpose: Create a new review and rating for a field
+Idempotency: No (creates new review)
+Side Effects: Creates new review record in database, sends notification to field owner
+
+Request:
+Required Headers: Authorization: Bearer <JWT_TOKEN>
+Optional Headers: Accept-Language
+Path Parameters: None
+Query Parameters: None
+Request Body Schema:
+- field_id (integer, required): ID of the field to review
+- rating (integer, required): Rating from 1-5 stars
+- comment (string, optional): Review comment text
+
+Example Request:
+curl -X POST http://localhost:5000/api/reviews \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Accept-Language: en" \
+  -d '{
+    "field_id": 1,
+    "rating": 5,
+    "comment": "Excellent field with great facilities!"
+  }'
+
+Response:
+Successful Response (201):
+{
+  "message": "Review created successfully",
+  "review": {
+    "id": 1,
+    "user_id": 1,
+    "field_id": 1,
+    "rating": 5,
+    "comment": "Excellent field with great facilities!",
+    "created_at": "2025-11-13T10:30:00"
+  }
+}
+
+Errors:
+- 400 Bad Request: {"message": "Required field missing"} (when required fields are missing)
+- 400 Bad Request: {"message": "Invalid rating"} (when rating is not between 1-5)
+- 401 Unauthorized: {"message": "Missing Authorization Header"} (when JWT token is missing)
+- 404 Not Found: {"message": "Field not found"} (when field with given ID doesn't exist)
+- 409 Conflict: {"message": "Review already exists"} (when user has already reviewed this field)
+- 500 Internal Server Error: {"message": "Internal server error", "error": "technical details"}
+
+UI Mapping: Review form modal or page with star rating selector and comment text area. Submit button creates review. Success should show confirmation.
+
+Edge Cases: Each user can only review a field once. Rating must be an integer between 1-5. Comments are optional.
+
+Endpoint Title: Get Field Reviews
+HTTP Method and Path: GET /fields/{field_id}/reviews
+Authentication Required: No
+Purpose: Retrieve all reviews for a specific field with pagination
+Idempotency: Yes (safe to retry)
+Side Effects: None (read-only operation)
+
+Request:
+Required Headers: None
+Optional Headers: Accept-Language
+Path Parameters:
+- field_id (integer, required): ID of the field whose reviews to retrieve
+Query Parameters:
+- page (integer, optional): Page number for pagination - defaults to 1
+- per_page (integer, optional): Items per page (1-100) - defaults to 10
+
+Example Request:
+curl -X GET http://localhost:5000/api/fields/1/reviews?page=1&per_page=5 \
+  -H "Accept-Language: en"
+
+Response:
+Successful Response (200):
+{
+  "reviews": [
+    {
+      "id": 1,
+      "user_id": 1,
+      "field_id": 1,
+      "rating": 5,
+      "comment": "Excellent field with great facilities!",
+      "created_at": "2025-11-13T10:30:00"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "pages": 1,
+    "per_page": 5,
+    "total": 1,
+    "has_next": false,
+    "has_prev": false,
+    "next_num": null,
+    "prev_num": null
+  }
+}
+
+Errors:
+- 404 Not Found: {"message": "Field not found"} (when field with given ID doesn't exist)
+- 500 Internal Server Error: {"message": "Error fetching reviews", "error": "technical details"}
+
+UI Mapping: Field detail page showing average rating and list of reviews with user names, ratings, comments, and dates.
+
+Edge Cases: Reviews are ordered by creation date (newest first). Pagination controls appear when there are more reviews than per_page.
+
+Endpoint Title: Update Review
+HTTP Method and Path: PUT /reviews/{id}
+Authentication Required: Yes (Bearer JWT)
+Authorization: User (owner of review)
+Purpose: Update an existing review
+Idempotency: Yes (safe to retry with same data)
+Side Effects: Updates review record in database
+
+Request:
+Required Headers: Authorization: Bearer <JWT_TOKEN>
+Optional Headers: Accept-Language
+Path Parameters:
+- id (integer, required): ID of the review to update
+Query Parameters: None
+Request Body Schema:
+- rating (integer, optional): New rating from 1-5 stars
+- comment (string, optional): New review comment text
+
+Example Request:
+curl -X PUT http://localhost:5000/api/reviews/1 \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Accept-Language: en" \
+  -d '{
+    "comment": "Updated review: Excellent field with great facilities and service!"
+  }'
+
+Response:
+Successful Response (200):
+{
+  "message": "Review updated successfully",
+  "review": {
+    "id": 1,
+    "user_id": 1,
+    "field_id": 1,
+    "rating": 5,
+    "comment": "Updated review: Excellent field with great facilities and service!",
+    "created_at": "2025-11-13T10:30:00"
+  }
+}
+
+Errors:
+- 400 Bad Request: {"message": "Invalid rating"} (when rating is not between 1-5)
+- 401 Unauthorized: {"message": "Missing Authorization Header"} (when JWT token is missing)
+- 403 Forbidden: {"message": "Unauthorized"} (when user is not owner of review)
+- 404 Not Found: {"message": "Review not found"} (when review with given ID doesn't exist)
+- 500 Internal Server Error: {"message": "Internal server error", "error": "technical details"}
+
+UI Mapping: Edit review button on user's review that opens a modal with the current rating and comment. Save updates the review.
+
+Edge Cases: Users can only update their own reviews. Rating and comment can be updated independently.
+
+Endpoint Title: Delete Review
+HTTP Method and Path: DELETE /reviews/{id}
+Authentication Required: Yes (Bearer JWT)
+Authorization: User (owner of review) or Admin
+Purpose: Delete an existing review
+Idempotency: No (deletes resource)
+Side Effects: Removes review record from database
+
+Request:
+Required Headers: Authorization: Bearer <JWT_TOKEN>
+Optional Headers: Accept-Language
+Path Parameters:
+- id (integer, required): ID of the review to delete
+Query Parameters: None
+Request Body: None
+
+Example Request:
+curl -X DELETE http://localhost:5000/api/reviews/1 \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Accept-Language: en"
+
+Response:
+Successful Response (200):
+{
+  "message": "Review deleted successfully"
+}
+
+Errors:
+- 401 Unauthorized: {"message": "Missing Authorization Header"} (when JWT token is missing)
+- 403 Forbidden: {"message": "Unauthorized"} (when user is not owner of review or admin)
+- 404 Not Found: {"message": "Review not found"} (when review with given ID doesn't exist)
+- 500 Internal Server Error: {"message": "Internal server error", "error": "technical details"}
+
+UI Mapping: Delete button on user's review with confirmation dialog. After deletion, review disappears from list.
+
+Edge Cases: Users can only delete their own reviews. Admins can delete any review.
+
+Endpoint Title: Create Team
+HTTP Method and Path: POST /teams
+Authentication Required: Yes (Bearer JWT)
+Authorization: Any authenticated user
+Purpose: Create a new team
+Idempotency: No (creates new team)
+Side Effects: Creates new team record and team membership for creator
+
+Request:
+Required Headers: Authorization: Bearer <JWT_TOKEN>
+Optional Headers: Accept-Language
+Path Parameters: None
+Query Parameters: None
+Request Body Schema:
+- name (string, required): Name of the team
+
+Example Request:
+curl -X POST http://localhost:5000/api/teams \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Accept-Language: en" \
+  -d '{
+    "name": "Alpha United"
+  }'
+
+Response:
+Successful Response (201):
+{
+  "message": "Team created successfully",
+  "team": {
+    "id": 1,
+    "name": "Alpha United",
+    "leader_id": 1,
+    "created_at": "2025-11-13T10:30:00",
+    "members_count": 1
+  },
+  "member": {
+    "id": 1,
+    "team_id": 1,
+    "user_id": 1,
+    "role": "leader",
+    "joined_at": "2025-11-13T10:30:00"
+  }
+}
+
+Errors:
+- 400 Bad Request: {"message": "Required field missing"} (when name is missing)
+- 401 Unauthorized: {"message": "Missing Authorization Header"} (when JWT token is missing)
+- 500 Internal Server Error: {"message": "Internal server error", "error": "technical details"}
+
+UI Mapping: Create team form with name field. Success should redirect to team detail page.
+
+Edge Cases: Creator automatically becomes team leader. Team names should be unique (not enforced in current implementation).
+
+Endpoint Title: Get Teams (List/Search)
+HTTP Method and Path: GET /teams
+Authentication Required: Yes (Bearer JWT)
+Authorization: Any authenticated user
+Purpose: Retrieve list of teams with optional filtering, sorting, and pagination
+Idempotency: Yes (safe to retry)
+Side Effects: None (read-only operation)
+
+Request:
+Required Headers: Authorization: Bearer <JWT_TOKEN>
+Optional Headers: Accept-Language
+Path Parameters: None
+Query Parameters:
+- search (string, optional): Search term for team name
+- sort_by (string, optional): Field to sort by (name, created_at, id) - defaults to id
+- sort_order (string, optional): Sort order (asc or desc) - defaults to asc
+- page (integer, optional): Page number for pagination - defaults to 1
+- per_page (integer, optional): Items per page (1-100) - defaults to 10
+
+Example Request:
+curl -X GET "http://localhost:5000/api/teams?search=Alpha&sort_by=name&sort_order=asc&page=1&per_page=5" \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Accept-Language: en"
+
+Response:
+Successful Response (200):
+{
+  "message": "Teams retrieved successfully",
+  "teams": [
+    {
+      "id": 1,
+      "name": "Alpha United",
+      "leader_id": 1,
+      "created_at": "2025-11-13T10:30:00",
+      "members_count": 1
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "pages": 1,
+    "per_page": 5,
+    "total": 1,
+    "has_next": false,
+    "has_prev": false,
+    "next_num": null,
+    "prev_num": null
+  }
+}
+
+Errors:
+- 401 Unauthorized: {"message": "Missing Authorization Header"} (when JWT token is missing)
+- 404 Not Found: {"message": "User not found"} (when user doesn't exist)
+- 500 Internal Server Error: {"message": "Error retrieving teams", "error": "technical details"}
+
+UI Mapping: Teams listing page with search box and sortable columns. Each team shows name, member count, and join button.
+
+Edge Cases: Search is case-insensitive. Invalid sort_by values default to sorting by id.
+
+Endpoint Title: Get Team Details
+HTTP Method and Path: GET /teams/{id}
+Authentication Required: Yes (Bearer JWT)
+Authorization: Any authenticated user
+Purpose: Retrieve detailed information about a specific team including members
+Idempotency: Yes (safe to retry)
+Side Effects: None (read-only operation)
+
+Request:
+Required Headers: Authorization: Bearer <JWT_TOKEN>
+Optional Headers: Accept-Language
+Path Parameters:
+- id (integer, required): ID of the team to retrieve
+Query Parameters: None
+
+Example Request:
+curl -X GET http://localhost:5000/api/teams/1 \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Accept-Language: en"
+
+Response:
+Successful Response (200):
+{
+  "team": {
+    "id": 1,
+    "name": "Alpha United",
+    "leader_id": 1,
+    "created_at": "2025-11-13T10:30:00",
+    "members_count": 1,
+    "members": [
+      {
+        "id": 1,
+        "user": {
+          "id": 1,
+          "name": "John Doe",
+          "email": "john.doe@example.com",
+          "phone": "01234567890",
+          "role": "user"
+        },
+        "role": "leader",
+        "joined_at": "2025-11-13T10:30:00"
+      }
+    ]
+  }
+}
+
+Errors:
+- 401 Unauthorized: {"message": "Missing Authorization Header"} (when JWT token is missing)
+- 404 Not Found: {"message": "Team not found"} (when team with given ID doesn't exist)
+- 500 Internal Server Error: {"message": "Error fetching team", "error": "technical details"}
+
+UI Mapping: Team detail page showing team name, creation date, member list with roles, and action buttons (join team, leave team, manage members for leaders).
+
+Edge Cases: Members list includes user details. Team leader has special permissions.
+
+Endpoint Title: Update Team
+HTTP Method and Path: PUT /teams/{id}
+Authentication Required: Yes (Bearer JWT)
+Authorization: Team leader
+Purpose: Update information about an existing team
+Idempotency: Yes (safe to retry with same data)
+Side Effects: Updates team record in database
+
+Request:
+Required Headers: Authorization: Bearer <JWT_TOKEN>
+Optional Headers: Accept-Language
+Path Parameters:
+- id (integer, required): ID of the team to update
+Query Parameters: None
+Request Body Schema:
+- name (string, optional): New name for the team
+
+Example Request:
+curl -X PUT http://localhost:5000/api/teams/1 \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Accept-Language: en" \
+  -d '{
+    "name": "Alpha United FC"
+  }'
+
+Response:
+Successful Response (200):
+{
+  "message": "Team updated successfully",
+  "team": {
+    "id": 1,
+    "name": "Alpha United FC",
+    "leader_id": 1,
+    "created_at": "2025-11-13T10:30:00",
+    "members_count": 1
+  }
+}
+
+Errors:
+- 400 Bad Request: {"message": "Required field missing"} (when request body is malformed)
+- 401 Unauthorized: {"message": "Missing Authorization Header"} (when JWT token is missing)
+- 403 Forbidden: {"message": "Unauthorized"} (when user is not team leader)
+- 404 Not Found: {"message": "Team not found"} (when team with given ID doesn't exist)
+- 500 Internal Server Error: {"message": "Internal server error", "error": "technical details"}
+
+UI Mapping: Edit team button for team leaders that opens a form with current team name. Save updates the team.
+
+Edge Cases: Only team leaders can update team information. Team name can be changed.
+
+Endpoint Title: Delete Team
+HTTP Method and Path: DELETE /teams/{id}
+Authentication Required: Yes (Bearer JWT)
+Authorization: Team leader
+Purpose: Delete an existing team
+Idempotency: No (deletes resource)
+Side Effects: Removes team record from database (cascades to team memberships)
+
+Request:
+Required Headers: Authorization: Bearer <JWT_TOKEN>
+Optional Headers: Accept-Language
+Path Parameters:
+- id (integer, required): ID of the team to delete
+Query Parameters: None
+Request Body: None
+
+Example Request:
+curl -X DELETE http://localhost:5000/api/teams/1 \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Accept-Language: en"
+
+Response:
+Successful Response (200):
+{
+  "message": "Team deleted successfully"
+}
+
+Errors:
+- 401 Unauthorized: {"message": "Missing Authorization Header"} (when JWT token is missing)
+- 403 Forbidden: {"message": "Unauthorized"} (when user is not team leader)
+- 404 Not Found: {"message": "Team not found"} (when team with given ID doesn't exist)
+- 500 Internal Server Error: {"message": "Internal server error", "error": "technical details"}
+
+UI Mapping: Delete team button for team leaders with confirmation dialog. After deletion, redirect to teams listing.
+
+Edge Cases: Deleting a team also removes all team memberships. This action cannot be undone.
+
+Endpoint Title: Find Players
+HTTP Method and Path: POST /teams/find-players
+Authentication Required: Yes (Bearer JWT)
+Authorization: Any authenticated user
+Purpose: Submit a request to find players for a team
+Idempotency: Yes (safe to retry)
+Side Effects: None (placeholder endpoint in current implementation)
+
+Request:
+Required Headers: Authorization: Bearer <JWT_TOKEN>
+Optional Headers: Accept-Language
+Path Parameters: None
+Query Parameters: None
+Request Body Schema: None (placeholder implementation)
+
+Example Request:
+curl -X POST http://localhost:5000/api/teams/find-players \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Accept-Language: en"
+
+Response:
+Successful Response (200):
+{
+  "message": "Player search request submitted successfully"
+}
+
+Errors:
+- 401 Unauthorized: {"message": "Missing Authorization Header"} (when JWT token is missing)
+- 404 Not Found: {"message": "User not found"} (when user doesn't exist)
+- 500 Internal Server Error: {"message": "Error submitting player search request", "error": "technical details"}
+
+UI Mapping: Find players button or form that submits a request to find team members. Success message should be displayed.
+
+Edge Cases: This is a placeholder implementation. In a real application, this would store requests in a database.
+
+Endpoint Title: Join Team
+HTTP Method and Path: POST /teams/join
+Authentication Required: Yes (Bearer JWT)
+Authorization: Any authenticated user
+Purpose: Join an existing team as a member
+Idempotency: No (creates new membership)
+Side Effects: Creates new team membership record
+
+Request:
+Required Headers: Authorization: Bearer <JWT_TOKEN>
+Optional Headers: Accept-Language
+Path Parameters: None
+Query Parameters: None
+Request Body Schema:
+- team_id (integer, required): ID of the team to join
+
+Example Request:
+curl -X POST http://localhost:5000/api/teams/join \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Accept-Language: en" \
+  -d '{
+    "team_id": 1
+  }'
+
+Response:
+Successful Response (200):
+{
+  "message": "Successfully joined team",
+  "team_member": {
+    "id": 2,
+    "team_id": 1,
+    "user_id": 2,
+    "role": "member",
+    "joined_at": "2025-11-13T10:35:00"
+  }
+}
+
+Errors:
+- 400 Bad Request: {"message": "Team ID is required"} (when team_id is missing)
+- 401 Unauthorized: {"message": "Missing Authorization Header"} (when JWT token is missing)
+- 404 Not Found: {"message": "Team not found"} (when team with given ID doesn't exist)
+- 404 Not Found: {"message": "User not found"} (when user doesn't exist)
+- 409 Conflict: {"message": "You are already a member of this team"} (when user is already a member)
+- 500 Internal Server Error: {"message": "Error joining team", "error": "technical details"}
+
+UI Mapping: Join team button on team listing or detail page. Success should update team member count and show user as member.
+
+Edge Cases: Users cannot join teams they're already members of. Users automatically get "member" role (not leader).
+
+Endpoint Title: Add Team Member
+HTTP Method and Path: POST /teams/{team_id}/members
+Authentication Required: Yes (Bearer JWT)
+Authorization: Team leader
+Purpose: Add a user to a team as a member
+Idempotency: No (creates new membership)
+Side Effects: Creates new team membership record
+
+Request:
+Required Headers: Authorization: Bearer <JWT_TOKEN>
+Optional Headers: Accept-Language
+Path Parameters:
+- team_id (integer, required): ID of the team to add member to
+Query Parameters: None
+Request Body Schema:
+- user_id (integer, required): ID of the user to add to the team
+
+Example Request:
+curl -X POST http://localhost:5000/api/teams/1/members \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Accept-Language: en" \
+  -d '{
+    "user_id": 3
+  }'
+
+Response:
+Successful Response (201):
+{
+  "message": "Team member added successfully",
+  "member": {
+    "id": 3,
+    "team_id": 1,
+    "user_id": 3,
+    "role": "member",
+    "joined_at": "2025-11-13T10:40:00"
+  }
+}
+
+Errors:
+- 400 Bad Request: {"message": "Required field missing"} (when user_id is missing)
+- 401 Unauthorized: {"message": "Missing Authorization Header"} (when JWT token is missing)
+- 403 Forbidden: {"message": "Unauthorized"} (when user is not team leader)
+- 404 Not Found: {"message": "Team not found"} (when team with given ID doesn't exist)
+- 404 Not Found: {"message": "User not found"} (when user with given ID doesn't exist)
+- 409 Conflict: {"message": "User already team member"} (when user is already a member)
+- 500 Internal Server Error: {"message": "Internal server error", "error": "technical details"}
+
+UI Mapping: Add member button for team leaders that opens a user search or selection interface. Success should update team member list.
+
+Edge Cases: Only team leaders can add members. Users cannot be added twice. Added users get "member" role.
+
+Endpoint Title: Remove Team Member
+HTTP Method and Path: DELETE /teams/{team_id}/members/{member_id}
+Authentication Required: Yes (Bearer JWT)
+Authorization: Team leader
+Purpose: Remove a member from a team
+Idempotency: No (deletes resource)
+Side Effects: Removes team membership record from database
+
+Request:
+Required Headers: Authorization: Bearer <JWT_TOKEN>
+Optional Headers: Accept-Language
+Path Parameters:
+- team_id (integer, required): ID of the team to remove member from
+- member_id (integer, required): ID of the member to remove
+Query Parameters: None
+Request Body: None
+
+Example Request:
+curl -X DELETE http://localhost:5000/api/teams/1/members/2 \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Accept-Language: en"
+
+Response:
+Successful Response (200):
+{
+  "message": "Team member removed successfully"
+}
+
+Errors:
+- 401 Unauthorized: {"message": "Missing Authorization Header"} (when JWT token is missing)
+- 403 Forbidden: {"message": "Unauthorized"} (when user is not team leader)
+- 404 Not Found: {"message": "Team not found"} (when team with given ID doesn't exist)
+- 404 Not Found: {"message": "Team member not found"} (when member with given ID doesn't exist)
+- 400 Bad Request: {"message": "Cannot remove team leader"} (when trying to remove team leader)
+- 500 Internal Server Error: {"message": "Internal server error", "error": "technical details"}
+
+UI Mapping: Remove member button for team leaders next to each team member. Confirmation dialog should appear before removal.
+
+Edge Cases: Team leaders cannot remove themselves (must transfer leadership first). Only team leaders can remove members.
+
+Endpoint Title: Get Team Schedule
+HTTP Method and Path: GET /teams/schedule
+Authentication Required: Yes (Bearer JWT)
+Authorization: Any authenticated user
+Purpose: Retrieve schedule information for all teams
+Idempotency: Yes (safe to retry)
+Side Effects: None (read-only operation)
+
+Request:
+Required Headers: Authorization: Bearer <JWT_TOKEN>
+Optional Headers: Accept-Language
+Path Parameters: None
+Query Parameters: None
+
+Example Request:
+curl -X GET http://localhost:5000/api/teams/schedule \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Accept-Language: en"
+
+Response:
+Successful Response (200):
+{
+  "schedule": [
+    {
+      "team": {
+        "id": 1,
+        "name": "Alpha United",
+        "leader_id": 1,
+        "created_at": "2025-11-13T10:30:00",
+        "members_count": 1
+      },
+      "bookings": [
+        {
+          "id": 1,
+          "user_id": 1,
+          "team_id": 1,
+          "field_id": 1,
+          "date": "2025-12-01",
+          "start_time": "14:00:00",
+          "end_time": "16:00:00",
+          "total_price": 500.0,
+          "status": "pending"
+        }
+      ]
+    }
+  ]
+}
+
+Errors:
+- 401 Unauthorized: {"message": "Missing Authorization Header"} (when JWT token is missing)
+- 500 Internal Server Error: {"message": "Error fetching schedule", "error": "technical details"}
+
+UI Mapping: Schedule dashboard showing all teams and their bookings in a calendar or list view. Useful for administrators or team coordinators.
+
+Edge Cases: Returns all teams and their bookings. May be performance-intensive with many teams/bookings.
+
+Endpoint Title: Create Payment
+HTTP Method and Path: POST /payments
+Authentication Required: Yes (Bearer JWT)
+Authorization: User (owner of booking)
+Purpose: Initiate a payment for a booking
+Idempotency: No (creates new payment)
+Side Effects: Creates new payment record in database, sends notification to field owner
+
+Request:
+Required Headers: Authorization: Bearer <JWT_TOKEN>
+Optional Headers: Accept-Language
+Path Parameters: None
+Query Parameters: None
+Request Body Schema:
+- booking_id (integer, required): ID of the booking to pay for
+- amount (float, required): Payment amount
+- payment_method (string, required): Payment method (vodafone_cash, etisalat_cash, orange_cash, we_pay, visa, mastercard)
+- currency (string, optional): Currency code (defaults to USD)
+
+Example Request:
+curl -X POST http://localhost:5000/api/payments \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Accept-Language: en" \
+  -d '{
+    "booking_id": 1,
+    "amount": 500.0,
+    "payment_method": "vodafone_cash",
+    "currency": "EGP"
+  }'
+
+Response:
+Successful Response (201):
+{
+  "message": "Payment initiated",
+  "payment": {
+    "id": 1,
+    "booking_id": 1,
+    "user_id": 1,
+    "amount": 500.0,
+    "currency": "EGP",
+    "payment_method": "vodafone_cash",
+    "transaction_id": "550e8400-e29b-41d4-a716-446655440000",
+    "status": "pending",
+    "created_at": "2025-11-13T10:45:00",
+    "completed_at": null
+  }
+}
+
+Errors:
+- 400 Bad Request: {"message": "Required field missing"} (when required fields are missing)
+- 401 Unauthorized: {"message": "Missing Authorization Header"} (when JWT token is missing)
+- 403 Forbidden: {"message": "Unauthorized"} (when user doesn't own the booking)
+- 404 Not Found: {"message": "Booking not found"} (when booking with given ID doesn't exist)
+- 400 Bad Request: {"message": "Payment already completed"} (when booking is already paid)
+- 500 Internal Server Error: {"message": "Internal server error", "error": "technical details"}
+
+UI Mapping: Payment initiation form showing booking details and amount. Payment method selection and submit button. Success should redirect to payment confirmation.
+
+Edge Cases: Each booking can only have one payment. Payment status starts as "pending". Transaction ID is automatically generated.
+
+Endpoint Title: Get User Payments
+HTTP Method and Path: GET /payments
+Authentication Required: Yes (Bearer JWT)
+Authorization: Any authenticated user
+Purpose: Retrieve all payments for the authenticated user with pagination
+Idempotency: Yes (safe to retry)
+Side Effects: None (read-only operation)
+
+Request:
+Required Headers: Authorization: Bearer <JWT_TOKEN>
+Optional Headers

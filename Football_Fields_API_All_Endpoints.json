@@ -1,0 +1,862 @@
+{
+    "info": {
+        "name": "Football Fields API - All Endpoints",
+        "_postman_id": "12345678-abcd-efgh-ijkl-1234567890ab",
+        "description": "Complete API collection with all endpoints for the football field booking system.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Authentication",
+            "item": [
+                {
+                    "name": "Register",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}"
+                        },
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/register"
+                        }
+                    }
+                },
+                {
+                    "name": "Login",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}"
+                        },
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/login"
+                        }
+                    }
+                },
+                {
+                    "name": "Forgot Password",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"test@example.com\"\n}"
+                        },
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/forgot-password"
+                        }
+                    }
+                },
+                {
+                    "name": "Verify OTP",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"test@example.com\",\n  \"otp\": \"123456\"\n}"
+                        },
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/verify-otp"
+                        }
+                    }
+                },
+                {
+                    "name": "Reset Password",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"test@example.com\",\n  \"otp\": \"123456\",\n  \"new_password\": \"newpassword123\"\n}"
+                        },
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/reset-password"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Fields",
+            "item": [
+                {
+                    "name": "Get All Fields",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/fields?page=1&per_page=10&search=field&governorate=cairo&min_price=50&max_price=200&sort_by=price&sort_order=asc"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Field by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/fields/1"
+                        }
+                    }
+                },
+                {
+                    "name": "Create Field",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Test Field\",\n  \"location\": \"Test Location\",\n  \"governorate\": \"Cairo\",\n  \"price_per_hour\": 100.0\n}"
+                        },
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/fields"
+                        }
+                    }
+                },
+                {
+                    "name": "Update Field",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Updated Field Name\"\n}"
+                        },
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/fields/1"
+                        }
+                    }
+                },
+                {
+                    "name": "Search Available Fields",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/fields/available?date=2025-12-25&start_time=10:00&end_time=12:00&governorate=cairo&search=field&min_price=50&max_price=200&sort_by=price&sort_order=asc&page=1&per_page=10"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Bookings",
+            "item": [
+                {
+                    "name": "Create Booking",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"field_id\": 1,\n  \"date\": \"2025-12-25\",\n  \"start_time\": \"10:00\",\n  \"end_time\": \"12:00\"\n}"
+                        },
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/bookings"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Booking by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/bookings/1"
+                        }
+                    }
+                },
+                {
+                    "name": "Update Booking",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"date\": \"2025-12-26\",\n  \"start_time\": \"14:00\",\n  \"end_time\": \"16:00\"\n}"
+                        },
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/bookings/1"
+                        }
+                    }
+                },
+                {
+                    "name": "Cancel Booking",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/bookings/1/cancel"
+                        }
+                    }
+                },
+                {
+                    "name": "Get User Bookings",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/bookings/user/1?page=1&per_page=10"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Field Bookings",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/bookings/field/1?page=1&per_page=10"
+                        }
+                    }
+                },
+                {
+                    "name": "Check Field Availability",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/bookings/field/1/availability?date=2025-12-25"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Reviews",
+            "item": [
+                {
+                    "name": "Create Review",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"field_id\": 1,\n  \"rating\": 5,\n  \"comment\": \"Great field!\"\n}"
+                        },
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/reviews"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Field Reviews",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/fields/1/reviews?page=1&per_page=10"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Teams",
+            "item": [
+                {
+                    "name": "Create Team",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"My Football Team\"\n}"
+                        },
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/teams"
+                        }
+                    }
+                },
+                {
+                    "name": "Get All Teams",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/teams?page=1&per_page=10&search=team&sort_by=name&sort_order=asc"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Team by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/teams/1"
+                        }
+                    }
+                },
+                {
+                    "name": "Find Players",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"position\": \"Forward\",\n  \"skill_level\": \"Intermediate\"\n}"
+                        },
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/teams/find-players"
+                        }
+                    }
+                },
+                {
+                    "name": "Join Team",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"team_id\": 1\n}"
+                        },
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/teams/join"
+                        }
+                    }
+                },
+                {
+                    "name": "Remove Team Member",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/teams/1/members/1"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Team Schedule",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/teams/schedule"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Payments",
+            "item": [
+                {
+                    "name": "Create Payment",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"booking_id\": 1,\n  \"amount\": 500.0,\n  \"payment_method\": \"vodafone_cash\"\n}"
+                        },
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/payments"
+                        }
+                    }
+                },
+                {
+                    "name": "Get User Payments",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/payments?page=1&per_page=10"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Payment by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/payments/1"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Payment Methods",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/payments/methods"
+                        }
+                    }
+                },
+                {
+                    "name": "Update Payment Status",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"status\": \"refunded\"\n}"
+                        },
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/payments/1/status"
+                        }
+                    }
+                },
+                {
+                    "name": "Refund Payment",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/payments/1/refund"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Payments by Booking",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/payments/booking/1"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Clubs",
+            "item": [
+                {
+                    "name": "Get Club Details",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/clubs/1/details"
+                        }
+                    }
+                },
+                {
+                    "name": "Search Clubs",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/clubs/search?name=club&governorate=cairo&min_rating=4.0&sort_by=rating&sort_order=desc&page=1&per_page=10"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Top Rated Clubs",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/clubs/top-rated?limit=10&page=1&per_page=10"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Notifications",
+            "item": [
+                {
+                    "name": "Get User Notifications",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/notifications?page=1&per_page=10&is_read=false"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Notification by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/notifications/1"
+                        }
+                    }
+                },
+                {
+                    "name": "Mark Notification as Read",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/notifications/1/read"
+                        }
+                    }
+                },
+                {
+                    "name": "Mark All Notifications as Read",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/notifications/read-all"
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Notification",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/notifications/1"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Unread Notifications Count",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/notifications/unread-count"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Analytics",
+            "item": [
+                {
+                    "name": "Get Dashboard Analytics",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/analytics/dashboard?start_date=2025-01-01&end_date=2025-12-31"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Booking Trends",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/analytics/bookings/trends?start_date=2025-01-01&end_date=2025-12-31&group_by=day"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Revenue Trends",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/analytics/revenue/trends?start_date=2025-01-01&end_date=2025-12-31&group_by=day"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Field Performance",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/analytics/fields/performance?start_date=2025-01-01&end_date=2025-12-31"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Data Export",
+            "item": [
+                {
+                    "name": "Export Bookings Data",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/analytics/export/bookings?start_date=2025-01-01&end_date=2025-12-31"
+                        }
+                    }
+                },
+                {
+                    "name": "Export Payments Data",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/analytics/export/payments?start_date=2025-01-01&end_date=2025-12-31"
+                        }
+                    }
+                },
+                {
+                    "name": "Export Users Data",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://127.0.0.1:5000/api/analytics/export/users"
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "token",
+            "value": "",
+            "type": "string"
+        }
+    ]
+}
