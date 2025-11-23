@@ -12,10 +12,8 @@ jwt = JWTManager()
 def get_language():
     """Get language from request headers or default to English"""
     lang = request.headers.get('Accept-Language', 'en')
-    # Extract primary language (e.g., 'en-US' -> 'en')
     if '-' in lang:
         lang = lang.split('-')[0]
-    # Support only 'en' and 'ar' for now
     if lang not in ['en', 'ar']:
         lang = 'en'
     return lang
@@ -30,7 +28,12 @@ def create_app():
     
     # Enable CORS
     CORS(app)
-    
+
+    # ⭐⭐⭐ HEALTH CHECK ROUTE ⭐⭐⭐
+    @app.route("/healthz")
+    def health_check():
+        return {"status": "ok"}, 200
+
     # Register blueprints
     from routes.auth import auth_bp
     from routes.fields import fields_bp
@@ -51,14 +54,14 @@ def create_app():
     app.register_blueprint(clubs_bp, url_prefix='/api')
     app.register_blueprint(notifications_bp, url_prefix='/api')
     app.register_blueprint(analytics_bp, url_prefix='/api')
-    
+
     # Add language support to app context
     @app.before_request
     def before_request():
-        # Make language available in request context
-        pass
-    
+        request.lang = get_language()
+
     return app
+
 
 if __name__ == '__main__':
     app = create_app()
